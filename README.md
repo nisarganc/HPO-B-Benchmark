@@ -1,5 +1,5 @@
 # VAE-Transformer based HPO Model 
-This repo is derived from [HPO-B repo](https://github.com/releaunifreiburg/HPO-B) to evaluate a newly proposed generative based black-box HPO algorithm on their meta-dataset to assess the performance of a VAE and Transformer model.
+This repo is derived from [HPO-B repo](https://github.com/releaunifreiburg/HPO-B) to evaluate a newly proposed generative based black-box HPO algorithm on their meta-dataset to assess the performance of a VAE-Transformer model.
 
 ## Downloads
 1. **HPO-B Dataset**:
