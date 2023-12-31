@@ -78,6 +78,8 @@ class generativeHPO(nn.Module):
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
                 torch.save(self.model.state_dict(), save_path+"best_model.pt")
+                if best_loss < 0.001:
+                    break
 
             if self.verbose:
                 print(f"Epoch {epoch}, loss: {epoch_loss}")

@@ -1,2 +1,4 @@
 hpob-data/
 saved-surrogates/
+__pycache__/
+methods/__pycache__/

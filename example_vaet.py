@@ -9,7 +9,7 @@ from methods.vaet.vaet_modules import generativeHPO
 hpob_hdlr = HPOBHandler(root_dir="hpob-data/", mode="v3-test", surrogates_dir="saved-surrogates/") 
 search_space_id = "5971" # hpob_hdlr.get_search_spaces()
 dataset_ids =  hpob_hdlr.get_datasets(search_space_id)  # ['10093', '3954', '43', '34536', '9970', '6566']
-seeds = ["test1", "test2", "test3", "test4"]
+seeds = ["test0", "test1", "test2", "test3", "test4"]
 
 dim = hpob_hdlr.get_search_space_dim(search_space_id)
 
@@ -35,19 +35,19 @@ for dataset_id in dataset_ids:
 
             # Training params
             'lr': 0.001,
-            'epochs': 10,
+            'epochs': 1000,
             'batch_size': 5,
 
             # Model Transformer params
-            'transformer_model_dim': 64, 
+            'transformer_model_dim': 128, 
             'transformer_layers': 4,
             'transformer_num_heads': 4,
-            'transformer_dim_ffn': 128,
+            'transformer_dim_ffn': 256,
             'transformer_pre_normalization': False,
 
             # Model VAE params
-            'hidden_dim_vae': 128,
-            'latent_dim_vae': 256,
+            'hidden_dim_vae': 256,
+            'latent_dim_vae': 512,
             
             # Model configs 
             'dropout': 0.1,
@@ -55,7 +55,7 @@ for dataset_id in dataset_ids:
         }
 
         #define the generative method as as HPO method
-        method = generativeHPO(params, torch_seed, verbose = False)
+        method = generativeHPO(params, torch_seed, verbose = True)
 
         #evaluate the HPO method
         acc = hpob_hdlr.evaluate_continuous(method, search_space_id = search_space_id, 
