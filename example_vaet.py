@@ -55,7 +55,7 @@ for dataset_id in dataset_ids:
         }
 
         #define the generative method as as HPO method
-        method = generativeHPO(params, torch_seed, verbose = True)
+        method = generativeHPO(params, torch_seed, verbose = False)
 
         #evaluate the HPO method
         acc = hpob_hdlr.evaluate_continuous(method, search_space_id = search_space_id, 
@@ -64,10 +64,11 @@ for dataset_id in dataset_ids:
                                                 n_trials = 50 )
         acc_per_method.append(acc)
         results[search_space_id][dataset_id][seed] = acc
+
+        with open(results_file, 'w') as fp:
+            json.dump(results, fp)
+
     plt.plot(np.array(acc_per_method).mean(axis=0))
 
-# save the results and write them to the json file
-with open(results_file, 'w') as fp:
-    json.dump(results, fp)  
 plt.legend(dataset_ids)
-plt.show()
+plt.savefig("vaet_accresults.png")

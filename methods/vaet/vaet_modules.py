@@ -98,6 +98,7 @@ class generativeHPO(nn.Module):
                 mask = sample['mask']
                 I, C, mask = I.to(self.device), C.to(self.device), mask.to(self.device)
                 xnew = self.model.generate(I, C, mask)
+                
         print(f"Best loss: {best_loss}")        
         return xnew.squeeze(0)
 
