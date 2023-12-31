@@ -61,7 +61,7 @@ for dataset_id in dataset_ids:
         acc = hpob_hdlr.evaluate_continuous(method, search_space_id = search_space_id, 
                                                 dataset_id = dataset_id,
                                                 seed = seed,
-                                                n_trials = 10 )
+                                                n_trials = 50 )
         acc_per_method.append(acc)
         results[search_space_id][dataset_id][seed] = acc
     plt.plot(np.array(acc_per_method).mean(axis=0))

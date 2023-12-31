@@ -24,6 +24,4 @@ if __name__ == "__main__":
 
     benchmark_plotter.generate_rank_and_regret()
     benchmark_plotter.generate_aggregated_plots()
-
-
-
+    
