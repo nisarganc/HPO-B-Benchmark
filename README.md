@@ -25,6 +25,9 @@ The [HPO-B Paper](https://arxiv.org/pdf/2106.06257.pdf) discusses various search
      ```
    - This script generates plots of rank regret, comparing the performance of the proposed generative-based black-box algorithm against methods like Random Search, Gaussian Process, and Deep Gaussian Process.
 
+## Results
+![Result Plot](./plots/vaet_benchmark_aggregated.png)
+
 ## References
 - [HPO-B Benchmark GitHub](https://github.com/releaunifreiburg/HPO-B)
 - Pineda-Arango, S., Jomaa, H. S., Wistuba, M., & Grabocka, J. (2021). HPO-B: [A Large-Scale Reproducible Benchmark for Black-Box HPO Based on OpenML. In Neural Information Processing Systems (NeurIPS) Track on Datasets and Benchmarks.](https://arxiv.org/pdf/2106.06257.pdf)
