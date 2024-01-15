@@ -11,8 +11,7 @@ if __name__ == "__main__":
     name = "vaet_benchmark"
     new_method_name = "VAET.json"
     experiments = ["Random", "DGP", "GP", "VAET"]
-    n_trials = 50
-    torch_seed = 999
+    n_trials = 5
 
     benchmark_plotter  = BenchmarkPlotter(experiments = experiments, 
                                           name = name,

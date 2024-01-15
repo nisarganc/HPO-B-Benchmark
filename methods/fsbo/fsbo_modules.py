@@ -62,8 +62,6 @@ class DeepKernelGP(nn.Module):
         self.likelihood = likelihood.to(self.device)
         self.mll        = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model).to(self.device)
 
-
-
     def train(self):
 
         if self.load_model:
@@ -232,6 +230,7 @@ class FSBO(nn.Module):
         assert(self.training)
         for task in self.tasks:
             inputs, labels = self.get_batch(task)
+
             for _ in range(self.n_inner_steps):
                 optimizer.zero_grad()
                 z = self.feature_extractor(inputs)
@@ -287,7 +286,7 @@ class FSBO(nn.Module):
     def get_batch(self,task):
         # we want to fit the gp given context info to new observations
         # task is an algorithm/dataset pair
-        Lambda,response =     np.array(self.train_data[task]["X"]), MinMaxScaler().fit_transform(np.array(self.train_data[task]["y"])).reshape(-1,)
+        Lambda, response = np.array(self.train_data[task]["X"]), MinMaxScaler().fit_transform(np.array(self.train_data[task]["y"])).reshape(-1,)
 
         card, dim = Lambda.shape
         

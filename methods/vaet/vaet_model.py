@@ -17,15 +17,17 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.nn.functional as F
 
-from vaet_utils import weight_init, normal_init_, xavier_init_
+from vaet_utils import weight_init, normal_init_, xavier_init_, device
 
-class VAET(nn.Module):
+class VAET_Model(nn.Module):
     def __init__(self, params):
         """
             @param params: parameters for the model
         """
-        super(VAET, self).__init__()
+        super(VAET_Model, self).__init__()
         self.params = params
+        self.device = device()
+        self.context_size = self.params['trials'] + self.params['obs'] - 1
 
         # Context Transformer
         self.cntxembedding = self.context_embedding(params)
@@ -41,31 +43,32 @@ class VAET(nn.Module):
         )
 
         self.en = nn.Sequential(
-            nn.Linear(params['hyperparam_dim'] + 1 +( params['transformer_model_dim'] * params['context_seq_len']), 
-                      params['hidden_dim_vae']),
-            nn.BatchNorm1d(params['hidden_dim_vae']),
+            nn.Linear(params['input_size'] + 1 + (params['transformer_model_dim'] * self.context_size), 
+                      params['enc_hidden_dim_vae']),
+
+            nn.BatchNorm1d(params['enc_hidden_dim_vae']),
             nn.Tanh()
         )
 
-        self.mu = nn.Linear(params['hidden_dim_vae'], params['latent_dim_vae'])
-        self.var = nn.Linear(params['hidden_dim_vae'], params['latent_dim_vae'])
+        self.mu = nn.Linear(params['enc_hidden_dim_vae'], params['latent_dim_vae'])
+        self.var = nn.Linear(params['enc_hidden_dim_vae'], params['latent_dim_vae'])
         
         self.de = nn.Sequential(
-            nn.Linear(params['latent_dim_vae'] + 1 + (params['transformer_model_dim'] * params['context_seq_len']),
-                      params['hidden_dim_vae']),
-            nn.BatchNorm1d(params['hidden_dim_vae']),
+            nn.Linear(params['latent_dim_vae'] + 1 + (params['transformer_model_dim'] * self.context_size),
+                      params['dec_hidden_dim_vae']),
+            nn.BatchNorm1d(params['dec_hidden_dim_vae']),
             nn.Tanh()
         )
 
         self.final_layer=nn.Sequential(
-            nn.Linear(params['hidden_dim_vae'], params['hyperparam_dim']),
+            nn.Linear(params['dec_hidden_dim_vae'], params['input_size']),
         )
           
     def context_embedding(self, params):
         init_fn = normal_init_ \
             if params['init_fn'] == 'normal_init' else xavier_init_
         ctx_embedding = nn.Sequential(
-            nn.Linear(params['hyperparam_dim']+1, params['transformer_model_dim']),
+            nn.Linear(params['input_size']+1, params['transformer_model_dim']),
             nn.Dropout(0.1)
         )
         weight_init(ctx_embedding, init_fn_=init_fn)
@@ -73,7 +76,7 @@ class VAET(nn.Module):
 
     def encode(self, x, I, c_latent):
         en_input = torch.cat([x, I.unsqueeze(1), 
-                              c_latent.view(-1, self.params['context_seq_len']* self.params['transformer_model_dim'] )], dim=1)
+                              c_latent.view(-1, self.context_size * self.params['transformer_model_dim'] )], dim=1)
         #x = torch.flatten(x)
         res = self.en(en_input)
         mu = self.mu(res)
@@ -82,7 +85,7 @@ class VAET(nn.Module):
             
     def decode(self, x, I, c_latent):
         de_input = torch.cat([x, I.unsqueeze(1), 
-                              c_latent.view(-1, self.params['context_seq_len']* self.params['transformer_model_dim'])], dim=1)
+                              c_latent.view(-1, self.context_size * self.params['transformer_model_dim'])], dim=1)
 
         res = self.de(de_input)
         res = self.final_layer(res)
@@ -105,24 +108,14 @@ class VAET(nn.Module):
         
         return (res, x, mu, log_var)
 
-    def loss_fc(self, x, *args):
-        (res, x, mu, log_var) = self.forward(x)
-        recon_loss = F.mse_loss(x,res)
-        KL_divergence = torch.mean(-0.5 * torch.sum((1 + log_var - mu**2 - torch.exp(log_var)),dim=1), dim=0)
-        KL_divergence.required_grad = True
-        loss = recon_loss + KL_divergence
-        
-        return dict({'loss': loss, 'recon_loss': recon_loss, 'kl_loss': KL_divergence})
-
     def generate(self, I, C, mask):
         emb = self.cntxembedding(C)
         c_latent = self.context(emb, mask)[0]
-        norm = torch.normal(torch.zeros(self.params['latent_dim_vae']).to(self.params['device']), torch.ones(self.params['latent_dim_vae']).to(self.params['device']))
+        norm = torch.normal(torch.zeros(self.params['latent_dim_vae']).to(self.device), torch.ones(self.params['latent_dim_vae']).to(self.device))
         # add dim 1 to norm to match the batch size
         norm = norm.unsqueeze(0)
         res = self.decode(norm, I, c_latent)
         return res
-
 
 class ContextTransformerEncoder(nn.Module):
   def __init__(self,

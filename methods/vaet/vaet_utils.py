@@ -7,6 +7,9 @@ import numpy as np
 from itertools import combinations
 import torch.nn as nn
 
+def device():
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def totorch(x, device):
     return torch.Tensor(x).to(device)  
 
@@ -48,57 +51,122 @@ def weight_init(
         init_fn_(module, mean_, sd_, bias, norm_bias)
 
 class TriplesDataset(torch.utils.data.Dataset):
-    def __init__(self, x_obs, y_obs, device, mode='train'):
-        self.x_obs = x_obs
-        self.y_obs = y_obs
+    def __init__(self, params, mode='train'):
         self.mode = mode
-        self.dimension = x_obs.shape[1]
-        self.device = device
-        self.load_data()
-
-    def load_data(self):
+        self.dimension = params['input_size']
+        self.max_trials = params['trials']
+        self.device = device()
+        self.all_combinations = []
+        self.all_masks = []
         self.triples = []
-        context_length = len(self.x_obs)
 
-        if self.mode == 'train':
-            for i in range(len(self.x_obs)):
-                x = self.x_obs[i]
-                y = self.y_obs[i]
-                
-                # All combinations C from one element to all elements in H (list of tuples)
-                all_combinations = []
-                all_masks = []
+    def load_history(self, x_obs, y_obs):
+        self.x_obs = x_obs
+        self.y_obs = y_obs 
+        self.hlength = len(self.x_obs) 
+        self.max_contexts = self.hlength + self.max_trials - 1
 
-                for subset_size in range(1, len(self.x_obs) + 1):
-                    combos = combinations(zip(self.x_obs, self.y_obs), subset_size)
-                    combos = [list(combination) for combination in combos]
+        self.all_combinations = []
+        self.all_masks = []
+        self.triples = []
 
-                    # pad with zeros to keep a fixed size of context_length
-                    combos = [combination + [(torch.zeros(self.dimension).to(self.device), torch.tensor(0.0, device=self.device))] * (context_length - subset_size) for combination in combos]
+        print(f"Inital observation History: {self.hlength}")
+        for subset_size in range(1, self.hlength + 1):
+            combos = combinations(zip(self.x_obs, self.y_obs), subset_size)
+            combos = [list(combination) for combination in combos]
+            
+            # pad with zeros to keep a fixed size 
+            combos = [combination + 
+                      [(torch.zeros(self.dimension).to(self.device), torch.tensor(0.0, device=self.device))] * (self.max_contexts - subset_size) for combination in combos]
 
-                    # create a mask to distinguish between observed and padded elements in C
-                    mask = [[0.0] * subset_size + [1.0] * (context_length - subset_size)] * len(combos)
-                    mask = torch.tensor(mask, device=self.device)
+            # create a mask to distinguish between observed and padded elements in C
+            mask = [[0.0] * subset_size + [1.0] * (self.max_contexts - subset_size)] * len(combos)
+            mask = torch.tensor(mask, device=self.device)
 
-                    # convert tuples and mask to tensors by concatenating x and y
-                    combos = [torch.stack([torch.cat([torch.tensor(x_i, device=self.device), torch.tensor(y_i, device=self.device).unsqueeze(0)]) for x_i, y_i in combination], dim=0) for combination in combos]
+            # convert tuples and mask to tensors by concatenating x and y
+            combos = [torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in combination], dim=0) for combination in combos]
 
-                    all_combinations.extend(combos) 
-                    all_masks.extend(mask)
+            self.all_combinations.extend(combos) 
+            self.all_masks.extend(mask)
+        print(f"Initial context combinations: {len(self.all_combinations)}") 
 
+        for i in range(self.hlength):
+            x = self.x_obs[i]
+            y = self.y_obs[i]
+        
             # determine I for each combination C
-            for C, mask in zip(all_combinations, all_masks):
+            for C, mask in zip(self.all_combinations, self.all_masks):
                 I = torch.tensor(int(all(y > xy_i[-1] for xy_i in C)), dtype=torch.int16, device=self.device)
                 self.triples.append((x, I, C, mask))  
-        else:
-            # For 'eval' mode
-            self.triples.append((
-                self.x_obs[0], # dummy x
-                torch.tensor(1, dtype=torch.int16, device=self.device),  # I=1
-                torch.stack([torch.cat([torch.tensor(x_i, device=self.device), torch.tensor(y_i, device=self.device).unsqueeze(0)]) for x_i, y_i in zip(self.x_obs, self.y_obs)], dim=0),
-                torch.tensor([0.0] * context_length, device=self.device)
-            ))
+        print(f"Dataset Triples: {len(self.triples)}")
 
+    def update_history(self, new_x, new_y):
+        """ Generate new triples with the new x and y observations """
+        # add new element to tensor
+        self.x_obs = torch.cat((self.x_obs, new_x.unsqueeze(0)), dim=0)
+        self.y_obs = torch.cat((self.y_obs, new_y), dim=0)
+        self.hlength += 1  
+
+        self.new_combinations = []
+        self.new_masks = []
+        self.triples = []
+
+        # Generate new combinations that include the new element
+        print(f"Updated observation History: {self.hlength}")
+        for subset_size in range(1, self.hlength + 1):
+            combos = combinations(zip(self.x_obs, self.y_obs), subset_size)
+            combos = [ list(combination) for combination in combos ]
+
+            new_combos = []
+            for context in combos:
+                for x_i, y_i in context:
+                    if torch.all(torch.eq(new_x, x_i)) and torch.eq(new_y, y_i):
+                        new_combos.append(context) 
+                        break
+                          
+            new_combos = [combination + 
+                          [(torch.zeros(self.dimension).to(self.device), torch.tensor(0.0, device=self.device))] * (self.max_contexts - subset_size) for combination in new_combos]
+
+            mask = [[0.0] * subset_size + [1.0] * (self.max_contexts - subset_size)] * len(new_combos)
+            mask = torch.tensor(mask, device=self.device)
+
+            new_combos = [torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in combination], dim=0) for combination in new_combos]
+
+            self.new_combinations.extend(new_combos)
+            self.new_masks.extend(mask)
+        print(f"New context combinations: {len(self.new_combinations)}") 
+
+        for i in range(self.hlength):
+            x = self.x_obs[i]
+            y = self.y_obs[i]
+            for C, mask in zip(self.new_combinations, self.new_masks):
+                I = torch.tensor(int(all(y > xy_i[-1] for xy_i in C)), dtype=torch.int16, device=self.device)
+                self.triples.append((x, I, C, mask))  
+
+        x = new_x
+        y = new_y
+        for C, mask in zip(self.all_combinations, self.all_masks):
+            I = torch.tensor(int(all(y > xy_i[-1] for xy_i in C)), dtype=torch.int16, device=self.device)
+            self.triples.append((x, I, C, mask))
+
+        self.all_combinations.extend(self.new_combinations)
+        self.all_masks.extend(self.new_masks)
+        print(f"Total context combinations: {len(self.all_combinations)}")
+        print(f"Dataset Triples: {len(self.triples)}")
+
+    def load_eval_data(self):
+        self.triples = []
+        H = torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in zip(self.x_obs, self.y_obs)], dim=0)
+        H = torch.cat([H, torch.zeros(self.max_contexts - self.hlength, self.dimension + 1).to(self.device)], dim=0)
+        mask = torch.tensor([0.0] * self.hlength, device=self.device)
+        mask = torch.cat([mask, torch.ones(self.max_contexts - self.hlength, device=self.device)], dim=0)
+        self.triples.append((
+            torch.zeros(self.dimension).to(self.device), # dummy x
+            torch.tensor(1, dtype=torch.int16, device=self.device),  # I=1
+            H, # C=H 
+            mask # mask    
+        ))
+        
     def __len__(self):
         return len(self.triples)
 
@@ -116,6 +184,7 @@ def collate_fn(batch):
     x = torch.stack(x, dim=0)
     I = torch.stack(I, dim=0)
     C = torch.stack(C, dim=0)
+
     mask = torch.stack(mask, dim=0)
     batch_ = {'x': x, 'I': I, 'C': C, 'mask': mask}
     return batch_
