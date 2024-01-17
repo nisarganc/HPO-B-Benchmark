@@ -27,7 +27,7 @@ class VAET_Model(nn.Module):
         super(VAET_Model, self).__init__()
         self.params = params
         self.device = device()
-        self.context_size = self.params['trials'] + self.params['obs'] - 1
+        self.context_size = self.params['max_hlength'] 
 
         # Context Transformer
         self.cntxembedding = self.context_embedding(params)

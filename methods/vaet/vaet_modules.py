@@ -26,11 +26,13 @@ class generativeHPO(nn.Module):
         print("Using generativeHPO Process as method...") 
         torch.manual_seed(torch_seed)
         
+        self.trials = params['trials']
         self.params = params
         self.search_space_id = search_space_id
         self.dataset_id = dataset_id
         self.seed = seed
         self.verbose = verbose
+        self.current_trial = 0
 
         self.device = device()
         print("Using device: ", self.device)
@@ -100,7 +102,7 @@ class generativeHPO(nn.Module):
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
                 torch.save(self.model.state_dict(), self.path+f"{self.search_space_id}_{self.dataset_id}_{self.seed}.pt")
-                if best_loss < 0.1:
+                if best_loss < 0.01:
                     break
 
             if self.verbose:
@@ -126,7 +128,9 @@ class generativeHPO(nn.Module):
         return xnew.squeeze(0)
 
     def observe_and_suggest(self, X_obs, y_obs, X_pen=None):
-        
+        self.current_trial += 1
+        print(f"Trial: {self.current_trial}")
+
         # Get sampled Triples dataset (x, I, C) 
         if self.first_history:
             self.params['obs'] = len(X_obs)
@@ -142,23 +146,4 @@ class generativeHPO(nn.Module):
         print('---------------------------')
 
         return x_new.cpu().numpy()
-    
-class VAET(nn.Module):
-    def __init__(self, train_data, valid_data, checkpoint_path, args ):
-        super(VAET, self).__init__()
-        self.params = args
-        self.checkpoint_path = checkpoint_path
-
-        self.train_data = train_data
-        self.valid_data = valid_data
-        first_dataset = list(self.train_data.keys())
-        print("Train data: ", first_dataset)
-        self.params.input_size = len(train_data[first_dataset]["X"][0])
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-        # Training params
-        self.lr = args.lr
-        self.epochs = args.max_epochs
-        
-        exit()
        
