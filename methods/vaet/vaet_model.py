@@ -43,7 +43,7 @@ class VAET_Model(nn.Module):
         )
 
         self.en = nn.Sequential(
-            nn.Linear(params['input_size'] + 1 + (params['transformer_model_dim'] * self.context_size), 
+            nn.Linear(params['input_size'] + 1 + (params['transformer_model_dim'] * self.context_size), # 625
                       params['enc_hidden_dim_vae']),
 
             nn.BatchNorm1d(params['enc_hidden_dim_vae']),

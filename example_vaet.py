@@ -12,8 +12,8 @@ def main(args):
 
     hpob_hdlr = HPOBHandler(root_dir="hpob-data/", mode="v3-test", surrogates_dir="saved-surrogates/") 
     search_space_id = args.space                            # hpob_hdlr.get_search_spaces()
-    dataset_ids = ['43'] # hpob_hdlr.get_datasets(search_space_id)  # ['10093', '3954', '43', '34536', '9970', '6566']
-    seeds = ["test0"] #, "test1", "test2", "test3", "test4"]  # hpob_hdlr.get_seeds()
+    dataset_ids =  hpob_hdlr.get_datasets(search_space_id)  # ['10093', '3954', '43', '34536', '9970', '6566']
+    seeds = ["test0", "test1", "test2", "test3", "test4"]   # hpob_hdlr.get_seeds()
     dim = hpob_hdlr.get_search_space_dim(search_space_id)   # 16
     args.input_size = dim
 
@@ -60,24 +60,24 @@ if __name__ == "__main__":
 
     # search space id
     parser.add_argument('--space', help='Search Space Id', type=str, default="5971")
-    parser.add_argument('--trials', help='Number of trials', type=str, default=50)
+    parser.add_argument('--trials', help='Number of trials', type=str, default=10)
 
     # Training params
-    parser.add_argument('--lr', help='Learning Rate', type=float, default=0.0001)
+    parser.add_argument('--lr', help='Learning Rate', type=float, default=0.001)
     parser.add_argument('--max_epochs', help='Meta-Train max epochs', type=int, default=1500)
     parser.add_argument('--batch_size', help='Meta-Train batch size', type=int, default=50)
 
     # Model Transformer params
     parser.add_argument('--transformer-model-dim', help='Model Transformer dimension', type=int, default=32)
     parser.add_argument('--transformer-layers', help='Model Transformer layers', type=int, default=4)
-    parser.add_argument('--transformer-num-heads', help='Model Transformer heads', type=int, default=4)
+    parser.add_argument('--transformer-num-heads', help='Model Transformer heads', type=int, default=2)
     parser.add_argument('--transformer-dim-ffn', help='Model Transformer dim ffn', type=int, default=64)
-    parser.add_argument('--transformer-pre-normalization', help='Model Transformer pre normalization', type=bool, default=False)
+    parser.add_argument('--transformer-pre-normalization', help='Model Transformer pre normalization', type=bool, default=True)
 
     # Model VAE params
-    parser.add_argument('--enc-hidden-dim-vae', help='Model VAE encoder hidden dim', type=int, default=32)
-    parser.add_argument('--dec-hidden-dim-vae', help='Model VAE decoder hidden dim', type=int, default=128)
-    parser.add_argument('--latent-dim-vae', help='Model VAE latent dim', type=int, default=32)
+    parser.add_argument('--enc-hidden-dim-vae', help='Model VAE encoder hidden dim', type=int, default=256)
+    parser.add_argument('--dec-hidden-dim-vae', help='Model VAE decoder hidden dim', type=int, default=256)
+    parser.add_argument('--latent-dim-vae', help='Model VAE latent dim', type=int, default=8)
 
     # Model configs
     parser.add_argument('--dropout', help='Model dropout', type=float, default=0.1)

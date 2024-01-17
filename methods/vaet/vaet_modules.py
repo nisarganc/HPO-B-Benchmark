@@ -139,6 +139,7 @@ class generativeHPO(nn.Module):
         # Train the model 
         x_new = self.train_and_eval(self.dataset)
         # print("X_new: ", x_new)
+        print('---------------------------')
 
         return x_new.cpu().numpy()
     
