@@ -12,7 +12,7 @@ def main(args):
 
     hpob_hdlr = HPOBHandler(root_dir="hpob-data/", mode="v3-test", surrogates_dir="saved-surrogates/") 
     search_space_id = args.space                            # hpob_hdlr.get_search_spaces()
-    dataset_ids =  ['9970'] #hpob_hdlr.get_datasets(search_space_id)  # ['10093', '3954', '43', '34536', '9970', '6566']
+    dataset_ids =  hpob_hdlr.get_datasets(search_space_id)  # ['10093', '3954', '43', '34536', '9970', '6566']
     seeds = hpob_hdlr.get_seeds()
     dim = hpob_hdlr.get_search_space_dim(search_space_id)   # 16
     args.input_size = dim

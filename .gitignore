@@ -2,4 +2,4 @@ hpob-data/
 saved-surrogates/
 __pycache__/
 methods/__pycache__/
-methods/model_checkpoints/
+methods/vaet/model_checkpoints/

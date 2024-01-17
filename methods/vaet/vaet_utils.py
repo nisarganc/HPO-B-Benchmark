@@ -130,6 +130,8 @@ class TriplesDataset(torch.utils.data.Dataset):
     def update_all(self, new_x, new_y):
         """ Generate new combinations that include the new element """
         print(f"Updated observation History: {self.hlength}")
+
+        new_combos = []
         for subset_size in range(1, self.hlength + 1):
             combos = combinations(zip(self.x_obs, self.y_obs), subset_size)
             combos = [ list(combination) for combination in combos ]
