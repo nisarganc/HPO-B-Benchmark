@@ -79,9 +79,8 @@ class generativeHPO(nn.Module):
 
         best_loss = float('inf')
         epoch = 0
-        min_epochs = self.params['min_epochs']
 
-        while best_loss > 0.1 or epoch < min_epochs: 
+        while best_loss > 0.1: 
             total_loss = 0
             for sample in train_loader:
                 x = sample['x']
@@ -100,19 +99,19 @@ class generativeHPO(nn.Module):
             epoch_loss = total_loss/len(train_loader)
 
             # Save the model if it has the best evaluation loss
-            if epoch_loss < best_loss:
-                best_loss = epoch_loss
+            if total_loss < best_loss:
+                best_loss = total_loss
                 torch.save(self.model.state_dict(), self.path+f"{self.search_space_id}_{self.dataset_id}_{self.seed}.pt")
 
             if self.verbose:
-                print(f"Epoch {epoch}, loss: {epoch_loss}")
+                print(f"Epoch {epoch}, loss: {total_loss}")
                 print(f"Best loss: {best_loss}")
         
         
         # load the best model
         self.model.load_state_dict(torch.load(self.path+f"{self.search_space_id}_{self.dataset_id}_{self.seed}.pt"))
         self.model.eval()
-        dataset.load_eval_data()
+        dataset.load_eval_data(self.x, self.y)
         eval_loader = DataLoader(dataset, batch_size=1, 
                                  collate_fn=collate_fn, drop_last=True, shuffle=False)
         with torch.no_grad():
@@ -128,6 +127,8 @@ class generativeHPO(nn.Module):
 
     def observe_and_suggest(self, X_obs, y_obs, X_pen=None):
         self.current_trial += 1
+        self.x = totorch(X_obs, self.device)
+        self.y = totorch(y_obs, self.device).reshape(-1)
         print(f"Trial: {self.current_trial}")
         # Get sampled Triples dataset (x, I, C) 
         if self.first_history:
@@ -141,7 +142,7 @@ class generativeHPO(nn.Module):
         # Train the model 
         x_new = self.train_and_eval(self.dataset)
         # print("X_new: ", x_new)
-        print('---------------------------')
+        
 
         return x_new.cpu().numpy()
        

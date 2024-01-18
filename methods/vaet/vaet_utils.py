@@ -121,6 +121,7 @@ class TriplesDataset(torch.utils.data.Dataset):
             self.x_obs = torch.cat((self.x_obs[:min_y_idx], self.x_obs[min_y_idx+1:]), dim=0)
             self.y_obs = torch.cat((self.y_obs[:min_y_idx], self.y_obs[min_y_idx+1:]), dim=0)
 
+
             # add the new x and y to the history
             self.x_obs = torch.cat((self.x_obs, new_x.unsqueeze(0)), dim=0)
             self.y_obs = torch.cat((self.y_obs, new_y), dim=0)
@@ -175,12 +176,23 @@ class TriplesDataset(torch.utils.data.Dataset):
         print(f"Dataset Triples: {len(self.triples)}") 
 
 
-    def load_eval_data(self):
+    def load_eval_data(self, x_obs, y_obs):
         self.triples = []
-        H = torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in zip(self.x_obs, self.y_obs)], dim=0)
-        H = torch.cat([H, torch.zeros(self.max_hlength - self.hlength, self.dimension + 1).to(self.device)], dim=0)
-        mask = torch.tensor([0.0] * self.hlength, device=self.device)
-        mask = torch.cat([mask, torch.ones(self.max_hlength - self.hlength, device=self.device)], dim=0)
+        l = len(x_obs)
+        if l < self.max_hlength:
+            x = x_obs
+            y = y_obs
+            siz = l
+        else:
+            # pick indices of the max_hlength largest y values
+            _, indices = torch.topk(y_obs, self.max_hlength)
+            x = x_obs[indices]
+            y = y_obs[indices]
+            siz = self.max_hlength
+        H = torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in zip(x, y)], dim=0)
+        H = torch.cat([H, torch.zeros(self.max_hlength - siz, self.dimension + 1).to(self.device)], dim=0)
+        mask = torch.tensor([0.0] * siz, device=self.device)
+        mask = torch.cat([mask, torch.ones(self.max_hlength - siz, device=self.device)], dim=0)
         self.triples.append((
             torch.zeros(self.dimension).to(self.device), # dummy x
             torch.tensor(1, dtype=torch.int16, device=self.device),  # I=1

@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     # search space id
     parser.add_argument('--space', help='Search Space Id', type=str, default="5971")
-    parser.add_argument('--trials', help='Number of trials', type=str, default=10)
+    parser.add_argument('--trials', help='Number of trials', type=str, default=50)
 
     # Training params
     parser.add_argument('--lr', help='Learning Rate', type=float, default=0.001)
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     # Model configs
     parser.add_argument('--dropout', help='Model dropout', type=float, default=0.1)
-    parser.add_argument('--init-fn', help='Model init fn', type=str, default='normal_init')
+    parser.add_argument('--init-fn', help='Model init fn', type=str, default='xavier_init')
 
     args = parser.parse_args()
 

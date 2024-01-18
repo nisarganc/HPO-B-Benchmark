@@ -232,6 +232,9 @@ class HPOBHandler:
             new_x = bo_method.observe_and_suggest(x_observed, y_tf_observed)
             x_q = xgb.DMatrix(new_x.reshape(-1,dim))
             new_y = bst_surrogate.predict(x_q)
+            print("Observations", y_observed)
+            print("New Y", new_y)
+            print('---------------------------')
 
             y_observed = np.append(y_observed, new_y).reshape(-1,1)
             x_observed = np.append(x_observed, new_x).reshape(-1,x_observed.shape[1])
