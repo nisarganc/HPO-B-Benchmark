@@ -79,8 +79,9 @@ class generativeHPO(nn.Module):
 
         best_loss = float('inf')
         epoch = 0
-        
-        while epoch < self.params['max_epochs']:  
+        min_epochs = self.params['min_epochs']
+
+        while best_loss > 0.1 or epoch < min_epochs: 
             total_loss = 0
             for sample in train_loader:
                 x = sample['x']
@@ -102,8 +103,6 @@ class generativeHPO(nn.Module):
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
                 torch.save(self.model.state_dict(), self.path+f"{self.search_space_id}_{self.dataset_id}_{self.seed}.pt")
-                if best_loss < 0.01:
-                    break
 
             if self.verbose:
                 print(f"Epoch {epoch}, loss: {epoch_loss}")
@@ -130,7 +129,6 @@ class generativeHPO(nn.Module):
     def observe_and_suggest(self, X_obs, y_obs, X_pen=None):
         self.current_trial += 1
         print(f"Trial: {self.current_trial}")
-
         # Get sampled Triples dataset (x, I, C) 
         if self.first_history:
             self.params['obs'] = len(X_obs)

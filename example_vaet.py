@@ -60,13 +60,13 @@ if __name__ == "__main__":
 
     # search space id
     parser.add_argument('--space', help='Search Space Id', type=str, default="5971")
-    parser.add_argument('--trials', help='Number of trials', type=str, default=50)
+    parser.add_argument('--trials', help='Number of trials', type=str, default=10)
 
     # Training params
     parser.add_argument('--lr', help='Learning Rate', type=float, default=0.001)
-    parser.add_argument('--max_epochs', help='Meta-Train max epochs', type=int, default=500)
-    parser.add_argument('--batch_size', help='Meta-Train batch size', type=int, default=20)
-    parser.add_argument('--max_hlength', help='Meta-Train dataset size', type=int, default=15)
+    parser.add_argument('--min_epochs', help='Meta-Train max epochs', type=int, default=10)
+    parser.add_argument('--batch_size', help='Meta-Train batch size', type=int, default=75)
+    parser.add_argument('--max_hlength', help='Meta-Train dataset size', type=int, default=10)
 
     # Model Transformer params
     parser.add_argument('--transformer-model-dim', help='Model Transformer dimension', type=int, default=32)
