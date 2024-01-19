@@ -45,9 +45,7 @@ class VAET_Model(nn.Module):
         self.en = nn.Sequential(
             nn.Linear(params['input_size'] + 1 + (params['transformer_model_dim'] * self.context_size), # 625
                       params['enc_hidden_dim_vae']),
-
-            nn.BatchNorm1d(params['enc_hidden_dim_vae']),
-            nn.Tanh()
+            nn.ReLU()
         )
 
         self.mu = nn.Linear(params['enc_hidden_dim_vae'], params['latent_dim_vae'])
@@ -56,8 +54,7 @@ class VAET_Model(nn.Module):
         self.de = nn.Sequential(
             nn.Linear(params['latent_dim_vae'] + 1 + (params['transformer_model_dim'] * self.context_size),
                       params['dec_hidden_dim_vae']),
-            nn.BatchNorm1d(params['dec_hidden_dim_vae']),
-            nn.Tanh()
+            nn.ReLU()
         )
 
         self.final_layer=nn.Sequential(
@@ -245,6 +242,3 @@ class EncoderLayer(nn.Module):
     output = self._dropout_layer(output) + norm_attn_
 
     return output, attn_weights
-
-
-

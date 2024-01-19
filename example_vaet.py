@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     # Training params
     parser.add_argument('--lr', help='Learning Rate', type=float, default=0.001)
-    parser.add_argument('--min_epochs', help='Meta-Train max epochs', type=int, default=10)
+    parser.add_argument('--max_epochs', help='Meta-Train max epochs', type=int, default=150)
     parser.add_argument('--batch_size', help='Meta-Train batch size', type=int, default=75)
     parser.add_argument('--max_hlength', help='Meta-Train dataset size', type=int, default=10)
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # Model VAE params
     parser.add_argument('--enc-hidden-dim-vae', help='Model VAE encoder hidden dim', type=int, default=256)
     parser.add_argument('--dec-hidden-dim-vae', help='Model VAE decoder hidden dim', type=int, default=256)
-    parser.add_argument('--latent-dim-vae', help='Model VAE latent dim', type=int, default=16)
+    parser.add_argument('--latent-dim-vae', help='Model VAE latent dim', type=int, default=8)
 
     # Model configs
     parser.add_argument('--dropout', help='Model dropout', type=float, default=0.1)

@@ -80,7 +80,7 @@ class generativeHPO(nn.Module):
         best_loss = float('inf')
         epoch = 0
 
-        while best_loss > 0.1: 
+        while epoch < self.params['max_epochs']: 
             total_loss = 0
             for sample in train_loader:
                 x = sample['x']
@@ -102,7 +102,9 @@ class generativeHPO(nn.Module):
             if total_loss < best_loss:
                 best_loss = total_loss
                 torch.save(self.model.state_dict(), self.path+f"{self.search_space_id}_{self.dataset_id}_{self.seed}.pt")
-
+                if best_loss < 0.1:
+                    break
+                
             if self.verbose:
                 print(f"Epoch {epoch}, loss: {total_loss}")
                 print(f"Best loss: {best_loss}")

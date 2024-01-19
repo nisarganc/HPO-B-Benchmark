@@ -7,7 +7,7 @@ def calculate_context_combinations(N, first):
         return (context_combinations, dataset_triples) 
     else:
         context_combinations = int((2**N - 1)/2)+1
-        dataset_triples = (N-1)*context_combinations+(2**N - 1)
+        dataset_triples = (N)*context_combinations+ 1 * (2**(N-1) - 1)
         return (context_combinations, dataset_triples)
 
 first = True
