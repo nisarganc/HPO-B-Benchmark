@@ -32,7 +32,7 @@ plt.plot(N, dataset_list, label="dataset triples")
 plt.legend()
 plt.xlabel("Number of history elements")
 plt.ylabel("Size of dataset")
-plt.savefig("Dataset_size.png")
+plt.savefig("vaet_dataset.png")
 plt.show()
 
 

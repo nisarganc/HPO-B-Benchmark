@@ -217,35 +217,7 @@ def collate_fn(batch):
     x = torch.stack(x, dim=0)
     I = torch.stack(I, dim=0)
     C = torch.stack(C, dim=0)
-
     mask = torch.stack(mask, dim=0)
+
     batch_ = {'x': x, 'I': I, 'C': C, 'mask': mask}
     return batch_
-
-
-
-    # def update_samples(self, new_x, new_y):
-    #     # Generate new combinations that include the new element
-    #     print(f"Updated observation History: {self.hlength}")        
-    #     max_combinations = 16384
-    #     for subset_size in range(1, self.hlength + 1):
-            
-    #         indices = range(len(self.hlength))
-           
-    #         if len(indices) >= subset_size:
-    #             sampled_indices = random.sample(list(combinations(indices, subset_size)), min(comb(len(indices), subset_size), max_combinations))
-
-    #             # Create combinations using sampled indices
-    #             for combo_indices in sampled_indices:
-    #                 combo = [(self.x_obs[i], self.y_obs[i]) for i in combo_indices]
-    #                 combo = combo + [(torch.zeros(self.dimension).to(self.device), torch.tensor(0.0, device=self.device))] * (self.max_contexts - subset_size)
-    #                 mask = [0.0] * subset_size + [1.0] * (self.max_contexts - subset_size)
-    #                 mask = torch.tensor(mask, device=self.device)
-    #                 combo = torch.stack([torch.cat([x_i.clone().detach().to(self.device), y_i.clone().detach().unsqueeze(0).to(self.device)]) for x_i, y_i in combo], dim=0)
-
-    #                 self.new_combinations.append(combo)
-    #                 self.new_masks.append(mask)
-    #     print(f"New context combinations: {len(self.new_combinations)}")
-
-
-# if min_y == new_y and torch.all(torch.eq(self.x_obs[min_y_idx], new_x)):
